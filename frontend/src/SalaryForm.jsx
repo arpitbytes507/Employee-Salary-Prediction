@@ -88,6 +88,11 @@ export default function SalaryForm() {
     try {
       const response = await axios.post(
         "https://employee-salary-prediction-njgz.onrender.com/predict",
+        {
+     Age: formData.Age,
+      "Years of Experience": formData["Years of Experience"],
+      "Job Title": formData["Job Title"].trim() // trim extra spaces
+     },
         formData
       );
 
