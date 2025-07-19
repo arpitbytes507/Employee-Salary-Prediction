@@ -16,16 +16,15 @@ except Exception as e:
     model = None
 
 # === Load job titles ===
-# === Load job titles ===
 csv_path = "Salary Data.csv"
 if os.path.exists(csv_path):
     try:
         df = pd.read_csv(csv_path)
-        job_list = [
+        job_list = sorted(set(
             str(job).strip().title()
             for job in df["Job Title"].dropna()
             if isinstance(job, str)
-        ]
+        ))
         job_titles_lower = [job.lower() for job in job_list]
         print(f"[INFO] ✅ Loaded {len(job_list)} job titles from CSV")
     except Exception as e:
@@ -66,8 +65,8 @@ def predict():
         if job.lower() not in job_titles_lower:
             return jsonify({"error": f"Job '{job}' not found in model"}), 400
 
-        # Get correctly cased job title for prediction
-        correct_job_title = job_list_cleaned[job_titles_lower.index(job.lower())]
+        # Get properly cased job title
+        correct_job_title = job_list[job_titles_lower.index(job.lower())]
 
         # Predict
         prediction = model.predict([[correct_job_title, age, experience]])
@@ -78,7 +77,8 @@ def predict():
 
     except Exception as e:
         print(f"[ERROR] ❌ Server error during prediction: {e}")
-        return jsonify({"error": f"Server error: {str(e)}"}), 500
+        return jsonify({"error": "Internal server error"}), 500
+
 
 # === Serve React App ===
 @app.route("/", defaults={"path": ""})
@@ -89,5 +89,6 @@ def serve_react(path):
     else:
         return send_from_directory(app.static_folder, "index.html")
 
+
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=5000, debug=True)
