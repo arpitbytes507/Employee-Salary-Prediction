@@ -16,24 +16,28 @@ except Exception as e:
     model = None
 
 # === Load job titles ===
+# === Load job titles ===
 csv_path = "Salary Data.csv"
 if os.path.exists(csv_path):
     try:
         df = pd.read_csv(csv_path)
-        job_list = df["Job Title"].dropna().unique().tolist()
-        # Clean job titles: strip & title case
-        job_list_cleaned = [job.strip().title() for job in job_list]
-        # Also prepare lowercase version for matching
-        job_titles_lower = [job.lower() for job in job_list_cleaned]
-        print(f"[INFO] ✅ Loaded {len(job_list_cleaned)} job titles from CSV")
+        job_list = [
+            str(job).strip().title()
+            for job in df["Job Title"].dropna()
+            if isinstance(job, str)
+        ]
+        job_titles_lower = [job.lower() for job in job_list]
+        print(f"[INFO] ✅ Loaded {len(job_list)} job titles from CSV")
     except Exception as e:
         print(f"[ERROR] ❌ Failed to load CSV: {e}")
-        job_list_cleaned = []
-        job_titles_lower = []
+        job_list = ["Software Engineer", "Data Scientist", "Manager", "Analyst"]
+        job_titles_lower = [job.lower() for job in job_list]
+        print("[WARNING] ⚠ Using fallback job list.")
 else:
-    job_list_cleaned = ["Software Engineer", "Data Scientist", "Manager", "Analyst"]
-    job_titles_lower = [job.lower() for job in job_list_cleaned]
-    print(f"[WARNING] ⚠ CSV not found. Using fallback job list.")
+    job_list = ["Software Engineer", "Data Scientist", "Manager", "Analyst"]
+    job_titles_lower = [job.lower() for job in job_list]
+    print("[WARNING] ⚠ CSV not found. Using fallback job list.")
+
 
 # === Prediction Endpoint ===
 @app.route("/predict", methods=["POST"])
