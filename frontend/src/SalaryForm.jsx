@@ -69,7 +69,7 @@ export default function SalaryForm() {
     setLoading(true);
     try {
       const response = await axios.post(
-        "https://employee-salary-prediction-njgz.onrender.com", // Flask API endpoint
+        "https://employee-salary-prediction-njgz.onrender.com/predict", // Flask API endpoint
         formData
       );
       const salary = response.data.predicted_salary;
