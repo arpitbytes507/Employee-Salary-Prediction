@@ -4,9 +4,9 @@ import joblib
 import pandas as pd
 
 # Load your trained ML model
-model = joblib.load("salary_model.pkl")
+model=joblib.load("salary_model.pkl")
 
-app = Flask(__name__)
+app=Flask(__name__)
 CORS(app)  # Allow requests from frontend
 
 @app.route("/predict", methods=["POST"])
