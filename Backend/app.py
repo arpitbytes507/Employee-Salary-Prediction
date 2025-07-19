@@ -6,7 +6,7 @@ import os
 app = Flask(__name__, static_folder="static", static_url_path="")
 
 # Load ML model
-model = joblib.load("model.pkl")
+model = joblib.load("salary_model.pkl")
 
 @app.route("/predict", methods=["POST"])
 def predict():
