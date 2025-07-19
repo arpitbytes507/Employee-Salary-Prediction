@@ -1,6 +1,5 @@
-flask
-flask-cors
-
-joblib
+Flask
+gunicorn
 pandas
 scikit-learn
+joblib
