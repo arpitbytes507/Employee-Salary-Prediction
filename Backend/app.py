@@ -2,6 +2,7 @@ from flask import Flask, send_from_directory, jsonify, request
 from flask_cors import CORS
 import joblib
 import os
+import pandas as pd
 
 app = Flask(__name__, static_folder="static", static_url_path="")
 CORS(app)
@@ -18,19 +19,21 @@ except Exception as e:
 csv_path = "Salary Data.csv"
 if os.path.exists(csv_path):
     try:
-        import pandas as pd
-        job_list = pd.read_csv(csv_path)["Job Title"].unique().tolist()
-        job_titles_lower = [j.lower() for j in job_list]  # For case-insensitive matching
-        print(f"[INFO] ✅ Loaded {len(job_list)} job titles from CSV.")
+        df = pd.read_csv(csv_path)
+        job_list = df["Job Title"].dropna().unique().tolist()
+        # Clean job titles: strip & title case
+        job_list_cleaned = [job.strip().title() for job in job_list]
+        # Also prepare lowercase version for matching
+        job_titles_lower = [job.lower() for job in job_list_cleaned]
+        print(f"[INFO] ✅ Loaded {len(job_list_cleaned)} job titles from CSV")
     except Exception as e:
         print(f"[ERROR] ❌ Failed to load CSV: {e}")
-        job_list = []
+        job_list_cleaned = []
         job_titles_lower = []
 else:
-    # Fallback job list if CSV is missing
-    job_list = ["Software Engineer", "Data Scientist", "Manager", "Analyst", "Designer"]
-    job_titles_lower = [j.lower() for j in job_list]
-    print(f"[WARNING] ⚠️ CSV not found. Using fallback job list of {len(job_list)} roles.")
+    job_list_cleaned = ["Software Engineer", "Data Scientist", "Manager", "Analyst"]
+    job_titles_lower = [job.lower() for job in job_list_cleaned]
+    print(f"[WARNING] ⚠ CSV not found. Using fallback job list.")
 
 # === Prediction Endpoint ===
 @app.route("/predict", methods=["POST"])
@@ -55,12 +58,15 @@ def predict():
         if not (0 <= experience <= age - 18):
             return jsonify({"error": f"Experience must be between 0 and {age - 18}"}), 400
 
-        # Validate job title (case-insensitive)
+        # Case-insensitive job validation
         if job.lower() not in job_titles_lower:
             return jsonify({"error": f"Job '{job}' not found in model"}), 400
 
+        # Get correctly cased job title for prediction
+        correct_job_title = job_list_cleaned[job_titles_lower.index(job.lower())]
+
         # Predict
-        prediction = model.predict([[job, age, experience]])
+        prediction = model.predict([[correct_job_title, age, experience]])
         predicted_salary = round(prediction[0], 2)
         print(f"[DEBUG] 📊 Predicted Salary: ₹{predicted_salary}")
 
