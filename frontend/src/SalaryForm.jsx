@@ -14,6 +14,7 @@ import {
   Box,
   createTheme,
   ThemeProvider,
+  Paper,
 } from "@mui/material";
 
 import {
@@ -22,11 +23,12 @@ import {
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend,
 } from "chart.js";
-import { Line } from "react-chartjs-2";
+import { Line, Bar } from "react-chartjs-2";
 
 // Register Chart.js modules
 ChartJS.register(
@@ -34,14 +36,28 @@ ChartJS.register(
   LinearScale,
   PointElement,
   LineElement,
+  BarElement,
   Title,
   Tooltip,
   Legend
 );
 
-const lightTheme = createTheme({
+const theme = createTheme({
   palette: {
-    mode: "light", // Force light mode
+    mode: "light",
+    primary: {
+      main: "#0077b6",
+    },
+    secondary: {
+      main: "#90e0ef",
+    },
+  },
+  typography: {
+    fontFamily: "Roboto, sans-serif",
+    h4: {
+      fontWeight: 700,
+      color: "#0077b6",
+    },
   },
 });
 
@@ -52,9 +68,10 @@ export default function SalaryForm() {
     "Education Level": "Bachelors",
     "Job Title": "",
     "Years of Experience": "",
+    "Actual Salary": "", // New field for comparison
   });
   const [predictedSalary, setPredictedSalary] = useState(null);
-  const [predictionHistory, setPredictionHistory] = useState([]); // For chart
+  const [predictionHistory, setPredictionHistory] = useState([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -67,36 +84,54 @@ export default function SalaryForm() {
     setError("");
     setPredictedSalary(null);
     setLoading(true);
+
     try {
       const response = await axios.post(
-        "https://employee-salary-prediction-njgz.onrender.com/predict", // Flask API endpoint
+        "https://employee-salary-prediction-njgz.onrender.com/predict",
         formData
       );
+
       const salary = response.data.predicted_salary;
       setPredictedSalary(salary);
+
       setPredictionHistory((prev) => [
         ...prev,
-        { label: formData["Job Title"], salary: salary },
+        {
+          label: formData["Job Title"],
+          predicted: salary,
+          actual: formData["Actual Salary"] || null,
+        },
       ]);
     } catch (err) {
       console.error(err);
-      setError("Failed to fetch prediction. Is your Flask backend running?");
+      setError(
+        "Failed to fetch prediction. Please check your input or try again later."
+      );
     } finally {
       setLoading(false);
     }
   };
 
-  // Prepare chart data
   const chartData = {
     labels: predictionHistory.map((item, index) => `#${index + 1}`),
     datasets: [
       {
         label: "Predicted Salary (₹)",
-        data: predictionHistory.map((item) => item.salary),
+        data: predictionHistory.map((item) => item.predicted),
+        backgroundColor: "rgba(0, 119, 182, 0.5)",
+        borderColor: "#0077b6",
         fill: false,
-        borderColor: "rgb(75, 192, 192)",
-        tension: 0.2,
-        pointBackgroundColor: "rgb(75, 192, 192)",
+        tension: 0.3,
+      },
+      {
+        label: "Actual Salary (₹)",
+        data: predictionHistory.map((item) =>
+          item.actual ? Number(item.actual) : null
+        ),
+        backgroundColor: "rgba(255, 99, 132, 0.5)",
+        borderColor: "#ff6b6b",
+        fill: false,
+        tension: 0.3,
       },
     ],
   };
@@ -105,25 +140,25 @@ export default function SalaryForm() {
     responsive: true,
     plugins: {
       legend: {
-        position: "top",
+        position: "bottom",
       },
       title: {
         display: true,
-        text: "Prediction History",
+        text: "Predicted vs Actual Salary",
+        font: { size: 18 },
       },
     },
   };
-
   return (
-    <ThemeProvider theme={lightTheme}>
+    <ThemeProvider theme={theme}>
       <Container
         maxWidth="sm"
         sx={{
           mt: 5,
           p: 4,
-          boxShadow: 3,
-          borderRadius: 2,
-          backgroundColor: "white",
+          boxShadow: 5,
+          borderRadius: 3,
+          background: "linear-gradient(145deg, #caf0f8, #ffffff)",
         }}
       >
         <Typography variant="h4" align="center" gutterBottom>
@@ -131,17 +166,20 @@ export default function SalaryForm() {
         </Typography>
 
         <form onSubmit={handleSubmit}>
+          {/* Age */}
           <TextField
             fullWidth
-            label="Age"
+            label="Age (18-65)"
             name="Age"
             type="number"
             value={formData.Age}
             onChange={handleChange}
             margin="normal"
             required
+            inputProps={{ min: 18, max: 65 }}
           />
 
+          {/* Gender */}
           <FormControl fullWidth margin="normal">
             <InputLabel>Gender</InputLabel>
             <Select
@@ -154,6 +192,7 @@ export default function SalaryForm() {
             </Select>
           </FormControl>
 
+          {/* Education Level */}
           <FormControl fullWidth margin="normal">
             <InputLabel>Education Level</InputLabel>
             <Select
@@ -161,13 +200,14 @@ export default function SalaryForm() {
               value={formData["Education Level"]}
               onChange={handleChange}
             >
+              <MenuItem value="High School">High School</MenuItem>
               <MenuItem value="Bachelors">Bachelors</MenuItem>
               <MenuItem value="Masters">Masters</MenuItem>
               <MenuItem value="PhD">PhD</MenuItem>
-              <MenuItem value="High School">High School</MenuItem>
             </Select>
           </FormControl>
 
+          {/* Job Title */}
           <TextField
             fullWidth
             label="Job Title"
@@ -178,6 +218,7 @@ export default function SalaryForm() {
             required
           />
 
+          {/* Years of Experience */}
           <TextField
             fullWidth
             label="Years of Experience"
@@ -189,11 +230,25 @@ export default function SalaryForm() {
             required
           />
 
+          {/* Actual Salary for Comparison */}
+          <TextField
+            fullWidth
+            label="Actual Salary (Optional)"
+            name="Actual Salary"
+            type="number"
+            value={formData["Actual Salary"]}
+            onChange={handleChange}
+            margin="normal"
+            helperText="Enter if known to compare with prediction"
+          />
+
+          {/* Submit Button */}
           <Box textAlign="center" mt={3}>
             <Button
               type="submit"
               variant="contained"
               color="primary"
+              size="large"
               disabled={loading}
             >
               {loading ? <CircularProgress size={24} /> : "Predict Salary"}
@@ -201,12 +256,14 @@ export default function SalaryForm() {
           </Box>
         </form>
 
+        {/* Error Alert */}
         {error && (
           <Alert severity="error" sx={{ mt: 2 }}>
             {error}
           </Alert>
         )}
 
+        {/* Success Alert */}
         {predictedSalary && (
           <Alert severity="success" sx={{ mt: 2 }}>
             💰 Predicted Salary: ₹{predictedSalary}
@@ -215,9 +272,9 @@ export default function SalaryForm() {
 
         {/* Chart */}
         {predictionHistory.length > 0 && (
-          <Box sx={{ mt: 5 }}>
+          <Paper elevation={3} sx={{ mt: 5, p: 2 }}>
             <Line data={chartData} options={chartOptions} />
-          </Box>
+          </Paper>
         )}
       </Container>
     </ThemeProvider>
