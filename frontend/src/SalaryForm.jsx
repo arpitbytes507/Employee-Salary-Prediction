@@ -63,7 +63,7 @@ const theme = createTheme({
 
 export default function SalaryForm() {
   const [formData, setFormData] = useState({
-    "Age" : age,
+    "Age" : "18",
     'Gender': "Male",
     "Education Level" : "Bachelors",
     "Job Title": 'Software Engineer',
