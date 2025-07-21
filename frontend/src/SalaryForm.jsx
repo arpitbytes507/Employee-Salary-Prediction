@@ -63,12 +63,12 @@ const theme = createTheme({
 
 export default function SalaryForm() {
   const [formData, setFormData] = useState({
-    Age: "",
-    Gender: "Male",
-    "Education Level": "Bachelors",
-    "Job Title": "",
-    "Years of Experience": "",
-    "Actual Salary": "", // New field for comparison
+    "Age" : age,
+    'Gender': "Male",
+    "Education Level" : "Bachelors",
+    "Job Title": 'Software Engineer',
+    "Years of Experience": '0',
+    "Actual Salary": "",
   });
   const [predictedSalary, setPredictedSalary] = useState(null);
   const [predictionHistory, setPredictionHistory] = useState([]);
