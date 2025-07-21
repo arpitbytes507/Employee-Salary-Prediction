@@ -3,7 +3,7 @@ import axios from "axios";
 import SalaryResult from "./SalaryResult";
 import SalaryChart from "./SalaryChart";
 
-const API_BASE_URL = "http://127.0.0.1:5000"; // Your Flask backend URL
+const API_BASE_URL = "https://employee-salary-prediction-1-ws7v.onrender.com"; // Your Flask backend URL
 
 export default function SalaryForm() {
   const [formData, setFormData] = useState({
