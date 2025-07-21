@@ -52,9 +52,11 @@ def predict():
         age = int(data.get("Age", 0))
         experience = int(data.get("Years of Experience", 0))
         job = data.get("Job Title", "").strip()
+        education= data.get("Education", "Bachelor's")
+        location =data.get("Location", "Mumbai")
 
         # Validate age
-        if not (18 <= age <= 65):
+        if not (18<= age <= 65):
             return jsonify({"error": "Age must be between 18 and 65"}), 400
 
         # Validate experience
@@ -69,7 +71,7 @@ def predict():
         correct_job_title = job_list[job_titles_lower.index(job.lower())]
 
         # Predict
-        prediction = model.predict([[correct_job_title, age, experience]])
+        prediction = model.predict([[correct_job_title, age, experience,education,location]])
         predicted_salary = round(prediction[0], 2)
         print(f"[DEBUG] 📊 Predicted Salary: ₹{predicted_salary}")
 
